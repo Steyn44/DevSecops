@@ -212,7 +212,8 @@
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>3.9.1.2184</version>
                 <configuration>
-                    <sonar.projectKey>your-project-key</sonar.projectKey>
+                    <sonar.projectKey>
+asgbuggywebappl</sonar.projectKey>
                 </configuration>
             </plugin>
             <plugin>
