@@ -7,15 +7,15 @@ provider "aws" {
 }
 
 variable "aws_region" {
-    type = string
+  type = string
 }
 
 variable "vpc_id" {
-    type = string
+  type = string
 }
 
 variable "key_name" {
-    type = string
+  type = string
 }
 
 resource "aws_security_group" "jenkins_sg" {
@@ -55,9 +55,11 @@ resource "aws_security_group" "jenkins_sg" {
 data "aws_ami" "amazon_linux" {
   most_recent = true
 
+  owners = ["amazon"]
+
   filter {
     name   = "name"
-    values = ["*al2023-ami-2023.4.*-kernel-6.1-x86_64*"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 
   filter {
@@ -69,8 +71,6 @@ data "aws_ami" "amazon_linux" {
     name   = "root-device-type"
     values = ["ebs"]
   }
-
-  owners = ["amazon"] # Canonical
 }
 
 resource "aws_iam_role" "test_role" {
@@ -95,40 +95,39 @@ EOF
 
 resource "aws_iam_instance_profile" "test_profile" {
   name = "test_profile"
-  role = "${aws_iam_role.test_role.name}"
+  role = aws_iam_role.test_role.name
 }
 
 resource "aws_iam_role_policy" "test_policy" {
   name = "test_policy"
-  role = "${aws_iam_role.test_role.id}"
+  role = aws_iam_role.test_role.id
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
-     {
-            "Effect": "Allow",
-            "Action": "*",
-            "Resource": "*"
-     }
+    {
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*"
+    }
   ]
 }
 EOF
 }
 
 resource "aws_instance" "web" {
-  ami             = "ami-04c913012f8977029"
-  instance_type   = "t2.medium" 
-  key_name        = var.key_name
-  iam_instance_profile = "${aws_iam_instance_profile.test_profile.name}"
-  security_groups = [aws_security_group.jenkins_sg.name]
-  user_data       = "${file("install_jenkins.sh")}"
+  ami                  = data.aws_ami.amazon_linux.id
+  instance_type        = "t2.medium" 
+  key_name             = var.key_name
+  iam_instance_profile = aws_iam_instance_profile.test_profile.name
+  security_groups      = [aws_security_group.jenkins_sg.name]
+  user_data            = file("install_jenkins.sh")
   tags = {
     Name = "Jenkins"
   }
-root_block_device {
+
+  root_block_device {
     volume_size = 30
-    
   }
 }
-
